@@ -1,0 +1,56 @@
+enable
+configure terminal
+hostname Router3
+
+! 1. Bring up physical LAN Interface (GigabitEthernet 0/0/0 for ISR4321)
+interface GigabitEthernet 0/0/0
+ no shutdown
+ exit
+
+! 2. Sub-interface for VLAN 10 (Data - /26)
+interface GigabitEthernet 0/0/0.10
+ encapsulation dot1Q 10
+ ip address 192.168.1.1 255.255.255.192
+ exit
+
+! 3. Sub-interface for VLAN 20 (Wireless - /26)
+interface GigabitEthernet 0/0/0.20
+ encapsulation dot1Q 20
+ ip address 192.168.1.65 255.255.255.192
+ exit
+
+! 4. Sub-interface for Native VLAN 99 (Management - /28)
+interface GigabitEthernet 0/0/0.99
+ encapsulation dot1Q 99 native
+ ip address 192.168.1.129 255.255.255.240
+ exit
+
+! 5. Configure WAN Link (Keep as needed for your topology)
+interface Serial 0/3/0
+ ip address 10.1.1.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+ exit
+
+! 6. Static Route (Keep as needed for your topology)
+ip route 192.168.2.0 255.255.255.0 10.1.1.2
+
+! 7. DHCP Address Exclusions
+! Exclude VLAN 10 Gateway (192.168.1.1) through Static Printer (192.168.1.10)
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+
+! Exclude VLAN 20 Gateway
+ip dhcp excluded-address 192.168.1.65
+
+! 8. DHCP Pools
+! Pool for VLAN 10 (Data / PCs)
+ip dhcp pool VLAN10_DATA
+ network 192.168.1.0 255.255.255.192
+ default-router 192.168.1.1
+ exit
+
+! Pool for VLAN 20 (Wireless AP & Clients)
+ip dhcp pool VLAN20_WIRELESS
+ network 192.168.1.64 255.255.255.192
+ default-router 192.168.1.65
+ exit
